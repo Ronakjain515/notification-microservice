@@ -1,14 +1,12 @@
 from rest_framework import serializers
 
-from utilities.constants import (
-    MEDIUM_CHOICE,
-    SMS_SERVICE_CHOICE,
-)
 
-
-class SendPushSerializer(serializers.Serializer):
+class SendFirebasePushSerializer(serializers.Serializer):
     """
     Serializer class for sending push notifications.
     """
-    medium = serializers.ChoiceField(choices=MEDIUM_CHOICE, allow_null=False, allow_blank=False)
-    service = serializers.ChoiceField(choices=SMS_SERVICE_CHOICE, allow_null=False, allow_blank=False)
+    title = serializers.CharField(allow_null=False, required=True, allow_blank=False)
+    content = serializers.CharField(allow_null=False, required=True, allow_blank=False)
+    tokens = serializers.ListField(allow_null=False, required=True, allow_empty=False)
+    badge_count = serializers.IntegerField(allow_null=True, required=False)
+    extra_args = serializers.JSONField(allow_null=True, required=False)

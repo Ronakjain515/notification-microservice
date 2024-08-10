@@ -26,7 +26,7 @@ except ValueError:
     pass
 
 
-def send_firebase_push_notification(request_data, tokens, badge_count):
+def send_firebase_push_notification(title, content, extra_args, tokens, badge_count):
     """
     Method to send push notification to users.
     """
@@ -36,11 +36,11 @@ def send_firebase_push_notification(request_data, tokens, badge_count):
         raise CustomException("firebase is not initialized.")
 
     response = messaging.MulticastMessage(
-        data=request_data,
+        data=extra_args,
         tokens=list(set(tokens)),
         notification=messaging.Notification(
-            title=request_data["title"],
-            body=request_data["content_in_notification"]
+            title=title,
+            body=content
         ),
         apns=messaging.APNSConfig(
             payload=messaging.APNSPayload(
@@ -51,12 +51,12 @@ def send_firebase_push_notification(request_data, tokens, badge_count):
             ttl=datetime.timedelta(seconds=3600),
             priority='high',
             notification=messaging.AndroidNotification(
-                channel_id="HealthLink-Notifications"
+                channel_id="Notification-Microservice"
             ),
         ),
         webpush=messaging.WebpushConfig(
             fcm_options=messaging.WebpushFCMOptions(
-                link="https://meet.google.com/npf-fiiy-ggr?authuser=0"
+                link="https://google.com"
             )
         )
     )
