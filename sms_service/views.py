@@ -48,6 +48,7 @@ class SmsServiceAPIView(CreateAPIView):
                 {
                     "message": message,
                     "failed_nos": failed_message,
+                    "errors": None
                 }
             )
         else:
@@ -98,19 +99,14 @@ class SmsServiceAPIView(CreateAPIView):
             else:
                 payload_copy = copy.deepcopy(payload)
                 payload_copy["errors"] = serializer.errors
-                self.failed_payload.append(payload_copy)
+                self.failed_messages_response_list.append(payload_copy)
 
-        response_data = {
-            "failed_messages": None,
-            "failed_payload": None
-        }
+
         if len(self.failed_messages_response_list) > 0:
             logger.warning("Partial success. Some messages failed to send.")
-            response_data["failed_messages"] = self.failed_messages_response_list
-            if len(self.failed_payload) > 0:
-                response_data["failed_payload"] = self.failed_payload
 
-            self.response_format["data"] = response_data
+
+            self.response_format["data"] = self.failed_messages_response_list
             self.response_format["status_code"] = status.HTTP_207_MULTI_STATUS
             self.response_format["error"] = "Failed Messages."
             self.response_format["message"] = "Partial Success."
