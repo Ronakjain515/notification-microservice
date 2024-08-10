@@ -22,8 +22,8 @@ def send_twilio_sms(message, send_to):
             logger.error("Invalid Twilio credentials.")
             raise CustomException("Invalid Twilio credentials.")
         elif e.status == 400:
-            failed_messages.append(send_to)
-
-    return failed_messages
+            return send_to
+    #
+    # return failed_messages
 
 
