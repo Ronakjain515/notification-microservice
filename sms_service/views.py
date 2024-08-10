@@ -38,21 +38,21 @@ class SmsServiceAPIView(CreateAPIView):
         logger.info("Initializing SmsServiceAPIView.")
         super(SmsServiceAPIView, self).__init__(**kwargs)
 
-    def send_sms_service(self, send_to, message, service_type):
-        logger.info(f"Attempting to send SMS via {service_type} to {send_to}.")
-        failed_message = SmsService().send_sms(service_type, message, send_to)
+    def send_sms_service(self, provider_type, service_data):
+        logger.info(f"Attempting to send SMS via {provider_type} to {service_data['sent_to']}")
+        failed_message = SmsService().send_sms(provider_type, service_data["message"], service_data["sent_to"])
 
         if len(failed_message) > 0:
             logger.warning(f"Partial success. Failed to send SMS to: {failed_message}")
             self.failed_messages_response_list.append(
                 {
-                    "message": message,
+                    "message": service_data["message"],
                     "failed_nos": failed_message,
                     "errors": None
                 }
             )
         else:
-            logger.info(f"SMS sent successfully to all recipients: {send_to}")
+            logger.info(f"SMS sent successfully to all recipients: {service_data['send_to']}")
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -81,21 +81,22 @@ class SmsServiceAPIView(CreateAPIView):
                 send_to = serializer.validated_data.get("send_to")
                 message = serializer.validated_data.get("message")
                 logger.info(f"Valid payload received for: {send_to}.")
+                service_data = {
+                    "sent_to": send_to,
+                    "message": message
+                }
 
                 if use_sqs:
                     logger.info(f"Sending message to SQS for {send_to}.")
                     message = {
                         "provider_type": "twilio",
                         "service_type": "sms",
-                        "service_data": {
-                            "sent_to": send_to,
-                            "message": message
-                        }
+                        "service_data": service_data
                     }
                     push_message_to_sqs(message)
                     logger.info(f"Message pushed to SQS for {send_to}.")
                 else:
-                    self.send_sms_service(send_to, message, service_type)
+                    self.send_sms_service(service_type, service_data)
             else:
                 payload_copy = copy.deepcopy(payload)
                 payload_copy["errors"] = serializer.errors
@@ -109,7 +110,7 @@ class SmsServiceAPIView(CreateAPIView):
             self.response_format["data"] = {
                 "failed_payload": self.failed_messages_response_list
             }
-            self.response_format["status_code"] = status.HTTP_207_MULTI_STATUS
+            self.response_format["status_code"] = status.HTTP_200_OK
             self.response_format["error"] = "Failed Messages."
             self.response_format["message"] = "Partial Success."
         else:
