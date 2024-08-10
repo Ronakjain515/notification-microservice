@@ -1,5 +1,4 @@
 import os
-
 from rest_framework.permissions import BasePermission
 
 from utilities import messages
