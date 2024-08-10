@@ -62,7 +62,7 @@ class SendEmailAPIView(CreateAPIView):
                 self.response_format["data"] = None
                 self.response_format["error"] = messages.FAILURE
                 self.response_format["status_code"] = status.HTTP_200_OK
-                self.response_format["message"] = [messages.SEND_FAILED.format("email")]
+                self.response_format["message"] = [body]
 
                 return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
