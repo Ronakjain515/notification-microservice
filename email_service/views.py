@@ -12,13 +12,16 @@ class SendEmailAPIView(APIView):
         serializer = EmailSerializer(data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
-            to_emails = validated_data.get('to_emails')
+            to_emails = validated_data.get('to')
+            cc_emails = validated_data.get('cc')
+            bcc_emails = validated_data.get('bcc')
             subject = validated_data.get('subject')
             message = validated_data.get('message')
             template_id = validated_data.get('template_id')
             dynamic_data = validated_data.get('dynamic_data', {})
+            attachments = validated_data.get('attachments')
 
-            response = EmailService.send_email(to_emails, subject, message, template_id, dynamic_data, email_type)
+            response = EmailService.send_email(to_emails, subject, message, template_id, dynamic_data, email_type, cc_emails, bcc_emails, attachments)
             success, body, headers = response
 
             if success:
