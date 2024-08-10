@@ -1,6 +1,16 @@
+import os
+from twilio.rest import Client
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 
+from utilities.utils import (
+    ResponseInfo,
+    CustomException)
 from .serializers import SmsServiceSerializer
+from utilities.constants import SMS_SERVICE_CHOICE
+from .backend import SmsService
+
 
 class SmsServiceAPIView(CreateAPIView):
     """
@@ -17,33 +27,15 @@ class SmsServiceAPIView(CreateAPIView):
         self.response_format = ResponseInfo().response
         super(SmsServiceAPIView, self).__init__(**kwargs)
 
-    def send_twilio_sms(self, send_to, message):
-        print(f"twilio creds = {os.getenv('TWILIO_ACCOUNT_SID')}, {os.getenv('TWILIO_AUTH_TOKEN')}")
-        print(f"send_to = {send_to}, message = {message}")
-        client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
-        message_sent = client.messages.create(
-            body=message,
-            from_=os.getenv("TWILIO_PHONE_NUMBER"),
-            to=send_to
-        )
-        print(f"message id {message_sent.sid}")
-
-
     def post(self, request, *args, **kwargs):
-        print(f"request.data = {request.data}")
+        service_type = self.kwargs["service_type"]
+        if service_type not in SMS_SERVICE_CHOICE:
+            raise CustomException("Invalid service type.")
+
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            print("is valid")
-            send_to = request.data.get("send_to")
-            medium = request.data.get("medium")
-            service = request.data.get("service")
-            if medium == "SMS" and service == "TWILIO":
-                message = request.data.get("message")
-                for ph_no in send_to:
-
-                    self.send_twilio_sms(ph_no, message)
-            else:
-                self.response_format["message"] = ["Service coming soon."]
-                self.response_format["status_code"] = status.HTTP_404_NOT_FOUND
+            send_to = serializer.validated_data.get("send_to")
+            message = serializer.validated_data.get("message")
+            SmsService().send_sms(service_type, message, send_to)
 
         return Response(self.response_format, status=self.response_format["status_code"])

@@ -1,4 +1,5 @@
 from rest_framework import status
+import logging
 
 from rest_framework.views import (
     set_rollback,
@@ -6,6 +7,7 @@ from rest_framework.views import (
 )
 from rest_framework.exceptions import APIException
 
+logger = logging.getLogger('django')
 
 class ResponseInfo(object):
     """
