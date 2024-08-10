@@ -7,7 +7,9 @@ from rest_framework.response import Response
 from utilities import messages
 from .backend import PushService
 from utilities.utils import ResponseInfo
-from .serializers import SendPushSerializer
+from .serializers import (
+    SendFirebasePushSerializer,
+)
 
 
 class SendPushAPIView(CreateAPIView):
@@ -16,7 +18,7 @@ class SendPushAPIView(CreateAPIView):
     """
     permission_classes = ()
     authentication_classes = ()
-    serializer_class = SendPushSerializer
+    serializer_class = SendFirebasePushSerializer
 
     def __init__(self, **kwargs):
         """
@@ -29,9 +31,22 @@ class SendPushAPIView(CreateAPIView):
         """
         POST Method for Send push notifications.
         """
-        PushService().send_push()
-        self.response_format["data"] = None
-        self.response_format["error"] = None
-        self.response_format["status_code"] = status.HTTP_200_OK
-        self.response_format["message"] = [messages.SHARED.format("Push Notification")]
+        # service type key.
+        service_type = kwargs.get("service_type")
+
+        push_serializer = self.get_serializer(data=request.data)
+
+        if push_serializer.is_valid(raise_exception=True):
+
+            title = push_serializer.validated_data.get("title")
+            content = push_serializer.validated_data.get("content")
+            tokens = push_serializer.validated_data.get("tokens")
+            extra_args = push_serializer.validated_data.get("extra_args")
+            badge_count = push_serializer.validated_data.get("badge_count")
+            PushService().send_push(service_type, title, content, extra_args, tokens, badge_count)
+
+            self.response_format["data"] = None
+            self.response_format["error"] = None
+            self.response_format["status_code"] = status.HTTP_200_OK
+            self.response_format["message"] = [messages.SHARED.format("Push Notification")]
         return Response(self.response_format)
