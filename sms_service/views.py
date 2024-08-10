@@ -74,7 +74,7 @@ class SmsServiceAPIView(CreateAPIView):
         use_sqs = request.data.get("use_sqs", False)
         logger.info(f"use_sqs flag is set to {use_sqs}.")
 
-        for payload in request.data["payload"]:
+        for payload in request.data.get("payload", []):
             serializer = self.get_serializer(data=payload)
             if serializer.is_valid(raise_exception=False):
                 send_to = serializer.validated_data.get("send_to")

@@ -1,3 +1,4 @@
+import copy
 from drf_yasg import openapi
 from rest_framework import status
 from rest_framework.generics import (
@@ -34,6 +35,8 @@ class SendPushAPIView(CreateAPIView):
         Constructor function for initializing response format.
         """
         self.response_format = ResponseInfo().response
+        self.failed_messages_response_list = list()
+        self.failed_payload = list()
         super(SendPushAPIView, self).__init__(**kwargs)
         logger.debug("SendPushAPIView instance initialized.")
 
@@ -70,9 +73,6 @@ class SendPushAPIView(CreateAPIView):
 
         use_sqs = request.data.get("use_sqs", False)
 
-        success_objects = []
-        failure_objects = []
-
         logger.debug(f"Looping for payload.")
         for request_data in request.data.get("payload", []):
             # Serialize the incoming request data
@@ -94,7 +94,6 @@ class SendPushAPIView(CreateAPIView):
                         self.send_push_service(service_type, push_serializer.validated_data)
                         logger.info("Push notification sent successfully.")
 
-                    success_objects.append(push_serializer.validated_data)
                 except Exception as e:
                     # Log any errors that occur during push notification sending
                     logger.error(f"Error sending push notification: {str(e)}")
@@ -104,11 +103,18 @@ class SendPushAPIView(CreateAPIView):
                     self.response_format["message"] = [messages.FAILURE.format("Push Notification")]
                     return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             else:
-                failure_objects.append(push_serializer.errors)
+                payload_copy = copy.deepcopy(request_data)
+                payload_copy["errors"] = push_serializer.errors
+                self.failed_payload.append(payload_copy)
+
+        response_data = {
+            "failed_payload": None
+        }
+        if len(self.failed_payload) > 0:
+            response_data["failed_payload"] = self.failed_payload
 
         # Update the response format for success
-        self.response_format["data"] = success_objects
-        self.response_format["failure_data"] = failure_objects
+        self.response_format["data"] = response_data
         self.response_format["error"] = None
         self.response_format["status_code"] = status.HTTP_200_OK
         self.response_format["message"] = [messages.SHARED.format("Push Notification")]
