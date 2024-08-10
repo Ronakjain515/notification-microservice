@@ -1,8 +1,10 @@
+from drf_yasg import openapi
 from rest_framework import status
 from rest_framework.generics import (
     CreateAPIView,
 )
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
 
 from utilities import messages
 from .backend import PushService
@@ -27,6 +29,17 @@ class SendPushAPIView(CreateAPIView):
         self.response_format = ResponseInfo().response
         super(SendPushAPIView, self).__init__(**kwargs)
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'service_type',
+                openapi.IN_PATH,
+                description="Service type",
+                type=openapi.TYPE_STRING,
+                enum=['firebase']
+            ),
+        ],
+    )
     def post(self, request, *args, **kwargs):
         """
         POST Method for Send push notifications.
