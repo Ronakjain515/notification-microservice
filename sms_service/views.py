@@ -106,7 +106,9 @@ class SmsServiceAPIView(CreateAPIView):
             logger.warning("Partial success. Some messages failed to send.")
 
 
-            self.response_format["data"] = self.failed_messages_response_list
+            self.response_format["data"] = {
+                "failed_payload": self.failed_messages_response_list
+            }
             self.response_format["status_code"] = status.HTTP_207_MULTI_STATUS
             self.response_format["error"] = "Failed Messages."
             self.response_format["message"] = "Partial Success."
