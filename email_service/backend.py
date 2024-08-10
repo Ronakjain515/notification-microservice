@@ -8,7 +8,7 @@ import mimetypes
 
 class EmailService:
     @staticmethod
-    def send_email(to_emails, subject=None, message=None, template_id=None, dynamic_data=None, email_type=None, cc_emails=None, bcc_emails=None, attachments=None):
+    def send_email(to_emails, subject=None, message=None, template_id=None, dynamic_data=None, provider_type=None, cc_emails=None, bcc_emails=None, attachments=None):
         if not isinstance(to_emails, list):
             to_emails = [to_emails]
         if cc_emails and not isinstance(cc_emails, list):
@@ -18,12 +18,12 @@ class EmailService:
         if attachments and not isinstance(attachments, list):
             attachments = [attachments]
 
-        if email_type == 'smtp':
+        if provider_type == 'smtp':
             return EmailService._send_smtp_email(to_emails, subject, message, cc_emails, bcc_emails, attachments)
-        elif email_type == 'sendgrid':
+        elif provider_type == 'sendgrid':
             return EmailService._send_sendgrid_email(to_emails, subject, message, template_id, dynamic_data, cc_emails, bcc_emails, attachments)
         else:
-            raise ValueError("Invalid email_type. Expected 'smtp' or 'sendgrid'.")
+            raise ValueError("Invalid provider_type. Expected 'smtp' or 'sendgrid'.")
 
     @staticmethod
     def _send_smtp_email(to_emails, subject, message, cc_emails=None, bcc_emails=None, attachments=None):
