@@ -16,5 +16,9 @@ class IsAuthenticatedPermission(BasePermission):
         """
         Function for checking if user is active.
         """
-        auth_header = request.headers.get('Authorization', None)
-        return auth_header == os.getenv("AUTH_KEY")
+        try:
+            auth_header = request.headers.get('Authorization', None)
+            head, token = auth_header.split(" ")
+            return head == "Bearer" and token == os.getenv("API_KEY")
+        except AttributeError:
+            return False
