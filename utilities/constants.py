@@ -4,7 +4,4 @@ MEDIUM_CHOICE = (
     ("PUSH", "Push")
 )
 
-SMS_SERVICE_CHOICE = (
-    ("TWILIO", "Twilio"),
-    ("SNS", "Sns")
-)
+SMS_SERVICE_CHOICE = ["twilio"]

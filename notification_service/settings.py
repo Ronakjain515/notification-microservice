@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "drf_yasg",
 
     'email_service',
+    'sms_service',
     'push_notifications',
 ]
 
@@ -89,6 +90,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
+
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "utilities.utils.custom_exception_handler",
 }
 
 
