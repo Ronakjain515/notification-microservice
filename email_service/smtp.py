@@ -2,7 +2,7 @@ import os
 from django.core.mail import EmailMessage
 import base64
 import mimetypes
-
+from utilities.utils import logger
 
 def send_smtp_email(to_emails, subject, message, cc_emails=None, bcc_emails=None, attachments=None):
     try:
@@ -34,7 +34,9 @@ def send_smtp_email(to_emails, subject, message, cc_emails=None, bcc_emails=None
                 email.attach(file_name, file_content, content_type)
         
         email.send()
+        logger.debug("Debug message from some_function")
+        logger.info("Email sent successfully via SMTP.")
         return True, "Email sent successfully via SMTP", {}
     except Exception as e:
-        print(e)
+        logger.error(f"Error sending email: {str(e)}")
         return False, str(e), {}
