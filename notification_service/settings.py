@@ -32,6 +32,11 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 
+REST_FRAMEWORK = {
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "EXCEPTION_HANDLER": "utilities.utils.custom_exception_handler",
+}
+
 # Application definition
 
 INSTALLED_APPS = [
