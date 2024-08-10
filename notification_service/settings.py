@@ -32,6 +32,11 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 
+REST_FRAMEWORK = {
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "EXCEPTION_HANDLER": "utilities.utils.custom_exception_handler",
+}
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -140,3 +145,62 @@ EMAIL_PORT = os.getenv('EMAIL_PORT')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+
+LOGGING_DIR = os.path.join(BASE_DIR, "log")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
+    },
+    "handlers": {
+        "debug": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGGING_DIR, "debug_logs/debug.log"),
+            "backupCount": 10,  # keep at most 10 log files
+            "maxBytes": 5242880,  # 5*1024*1024 bytes (5MB)
+            "formatter": "standard",
+        },
+        "warning": {
+            "level": "WARNING",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGGING_DIR, "warning_logs/warning.log"),
+            "backupCount": 10,  # keep at most 10 log files
+            "maxBytes": 5242880,  # 5*1024*1024 bytes (5MB)
+            "formatter": "standard",
+        },
+        "error": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGGING_DIR, "error_logs/error.log"),
+            "backupCount": 10,  # keep at most 10 log files
+            "maxBytes": 5242880,  # 5*1024*1024 bytes (5MB)
+            "formatter": "standard",
+        },
+        "info": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGGING_DIR, "info_logs/info.log"),
+            "backupCount": 10,  # keep at most 10 log files
+            "maxBytes": 5242880,  # 5*1024*1024 bytes (5MB)
+            "formatter": "standard",
+        },
+        "critical_logs": {
+            "level": "CRITICAL",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGGING_DIR, "critical_logs/critical.log"),
+            "backupCount": 10,  # keep at most 10 log files
+            "maxBytes": 5242880,  # 5*1024*1024 bytes (5MB)
+            "formatter": "standard",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["debug", "warning", "error", "info", "critical_logs"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}
