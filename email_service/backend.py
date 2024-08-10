@@ -4,19 +4,19 @@ from utilities.utils import logger
 
 class EmailService:
     @staticmethod
-    def send_email(to_emails, subject=None, message=None, template_id=None, dynamic_data=None, provider_type=None, cc_emails=None, bcc_emails=None, attachments=None):
+    def send_email(provider_type, to, subject=None, message=None, template_id=None, dynamic_template_data=None, cc=None, bcc=None, attachments=None):
         """
         Sends an email using the specified provider (SMTP or SendGrid).
         
         Parameters:
-        - to_emails: List of recipient email addresses.
+        - provider_type: The email provider to use ('smtp' or 'sendgrid').
+        - to: List of recipient email addresses.
         - subject: Subject of the email.
         - message: Body of the email.
         - template_id: (Optional) ID of the email template for SendGrid.
-        - dynamic_data: (Optional) Data to populate dynamic fields in the email template.
-        - provider_type: The email provider to use ('smtp' or 'sendgrid').
-        - cc_emails: (Optional) List of CC email addresses.
-        - bcc_emails: (Optional) List of BCC email addresses.
+        - dynamic_template_data: (Optional) Data to populate dynamic fields in the email template.
+        - cc: (Optional) List of CC email addresses.
+        - bcc: (Optional) List of BCC email addresses.
         - attachments: (Optional) List of file attachments to include in the email.
         
         Returns:
@@ -27,25 +27,25 @@ class EmailService:
         """
         try:
             # Ensure lists are used for email addresses and attachments
-            if not isinstance(to_emails, list):
-                to_emails = [to_emails]
-            if cc_emails and not isinstance(cc_emails, list):
-                cc_emails = [cc_emails]
-            if bcc_emails and not isinstance(bcc_emails, list):
-                bcc_emails = [bcc_emails]
+            if not isinstance(to, list):
+                to = [to]
+            if cc and not isinstance(cc, list):
+                cc = [cc]
+            if bcc and not isinstance(bcc, list):
+                bcc = [bcc]
             if attachments and not isinstance(attachments, list):
                 attachments = [attachments]
 
             # Log email sending details
-            logger.info(f"Sending email. Provider: {provider_type}, To: {to_emails}, Subject: {subject}")
+            logger.info(f"Sending email. Provider: {provider_type}, To: {to}, Subject: {subject}")
 
             # Call the appropriate method based on the provider_type
             if provider_type == 'smtp':
-                response = EmailService._send_smtp_email(to_emails, subject, message, cc_emails, bcc_emails, attachments)
+                response = EmailService._send_smtp_email(to, subject, message, cc, bcc, attachments)
                 logger.info("SMTP email sent successfully.")
                 return response
             elif provider_type == 'sendgrid':
-                response = EmailService._send_sendgrid_email(to_emails, subject, message, template_id, dynamic_data, cc_emails, bcc_emails, attachments)
+                response = EmailService._send_sendgrid_email(to, subject, message, template_id, dynamic_template_data, cc, bcc, attachments)
                 logger.info("SendGrid email sent successfully.")
                 return response
             else:
