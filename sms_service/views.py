@@ -1,5 +1,6 @@
 from rest_framework.generics import CreateAPIView
 
+from .serializers import SmsServiceSerializer
 
 class SmsServiceAPIView(CreateAPIView):
     """

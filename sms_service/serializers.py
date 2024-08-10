@@ -1,12 +1,8 @@
-MEDIUM_CHOICE = (
-    ("SMS", "Sms"),
-    ("EMAIL", "Email"),
-    ("PUSH", "Push")
-)
+from rest_framework import serializers
 
-SMS_SERVICE_CHOICE = (
-    ("TWILIO", "Twilio"),
-    ("SNS", "Sns")
+from utilities.constants import (
+    MEDIUM_CHOICE,
+    SMS_SERVICE_CHOICE
 )
 
 
