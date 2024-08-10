@@ -75,3 +75,5 @@ class CustomException(APIException):
             self.status_code = code
         else:
             self.code = self.default_code
+
+

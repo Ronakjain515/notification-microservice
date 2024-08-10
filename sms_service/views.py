@@ -13,6 +13,7 @@ from utilities.utils import (
 from .serializers import SmsServiceSerializer
 from utilities.constants import SMS_SERVICE_CHOICE
 from .backend import SmsService
+from utilities.permissions import IsAuthenticatedPermission
 
 
 class SmsServiceAPIView(CreateAPIView):
@@ -20,7 +21,7 @@ class SmsServiceAPIView(CreateAPIView):
     Class to create api to send sms to phone numbers.
     """
     authentication_classes = ()
-    permission_classes = ()
+    permission_classes = (IsAuthenticatedPermission,)
     serializer_class = SmsServiceSerializer
 
     def __init__(self, **kwargs):
@@ -29,6 +30,19 @@ class SmsServiceAPIView(CreateAPIView):
         """
         self.response_format = ResponseInfo().response
         super(SmsServiceAPIView, self).__init__(**kwargs)
+
+    def send_sms_service(self, send_to, message, service_type):
+
+        failed_message = SmsService().send_sms(service_type, message, send_to)
+
+        if len(failed_message) > 0:
+            logger.warning(f"Partial success. Failed to send SMS to: {failed_message}")
+            self.response_format["data"] = failed_message
+            self.response_format["status_code"] = status.HTTP_207_MULTI_STATUS
+            self.response_format["error"] = "Failed Messages."
+            self.response_format["message"] = "Partial Success."
+        else:
+            logger.info(f"SMS sent successfully to all recipients: {send_to}")
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -49,17 +63,14 @@ class SmsServiceAPIView(CreateAPIView):
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            send_to = serializer.validated_data.get("send_to")
-            message = serializer.validated_data.get("message")
-            failed_message = SmsService().send_sms(service_type, message, send_to)
-
-            if len(failed_message) > 0:
-                logger.warning(f"Partial success. Failed to send SMS to: {failed_message}")
-                self.response_format["data"] = failed_message
-                self.response_format["status_code"] = status.HTTP_207_MULTI_STATUS
-                self.response_format["error"] = "Failed Messages."
-                self.response_format["message"] = "Partial Success."
+            use_sqs = serializer.validated_data.get("use_sqs")
+            if use_sqs:
+                # send data to sqs
+                pass
             else:
-                logger.info(f"SMS sent successfully to all recipients: {send_to}")
+                send_to = serializer.validated_data.get("send_to")
+                message = serializer.validated_data.get("message")
+                self.send_sms_service(send_to, message, service_type)
+
 
         return Response(self.response_format, status=self.response_format["status_code"])
