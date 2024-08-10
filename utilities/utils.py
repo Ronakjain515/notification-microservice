@@ -9,6 +9,7 @@ from rest_framework.exceptions import APIException
 
 logger = logging.getLogger('django')
 
+
 class ResponseInfo(object):
     """
     Class for setting how API should send response.
