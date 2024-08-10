@@ -1,6 +1,3 @@
-import os
-from twilio.rest import Client
-from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 
@@ -30,7 +27,7 @@ class SmsServiceAPIView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         service_type = self.kwargs["service_type"]
         if service_type not in SMS_SERVICE_CHOICE:
-            raise CustomException("Invalid service type.")
+            raise CustomException("Invalid service type.", 400)
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
