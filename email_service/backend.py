@@ -28,24 +28,24 @@ class EmailService:
         try:
             # Ensure lists are used for email addresses and attachments
             if not isinstance(to, list):
-                to_emails = [to]
-            if cc_emails and not isinstance(cc, list):
-                cc_emails = [cc]
-            if bcc_emails and not isinstance(bcc, list):
-                bcc_emails = [bcc]
+                to = [to]
+            if cc and not isinstance(cc, list):
+                cc = [cc]
+            if bcc and not isinstance(bcc, list):
+                bcc = [bcc]
             if attachments and not isinstance(attachments, list):
                 attachments = [attachments]
 
             # Log email sending details
-            logger.info(f"Sending email. Provider: {provider_type}, To: {to_emails}, Subject: {subject}")
+            logger.info(f"Sending email. Provider: {provider_type}, To: {to}, Subject: {subject}")
 
             # Call the appropriate method based on the provider_type
             if provider_type == 'smtp':
-                response = EmailService._send_smtp_email(to_emails, subject, message, cc_emails, bcc_emails, attachments)
+                response = EmailService._send_smtp_email(to, subject, message, cc, bcc, attachments)
                 logger.info("SMTP email sent successfully.")
                 return response
             elif provider_type == 'sendgrid':
-                response = EmailService._send_sendgrid_email(to_emails, subject, message, template_id, dynamic_template_data, cc_emails, bcc_emails, attachments)
+                response = EmailService._send_sendgrid_email(to, subject, message, template_id, dynamic_template_data, cc, bcc, attachments)
                 logger.info("SendGrid email sent successfully.")
                 return response
             else:
