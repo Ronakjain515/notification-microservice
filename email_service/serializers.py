@@ -8,7 +8,7 @@ class EmailSerializer(serializers.Serializer):
     subject = serializers.CharField(required=False)
     message = serializers.CharField(required=False)
     template_id = serializers.CharField(required=False)
-    dynamic_data = serializers.DictField(required=False, allow_null=True, default=dict)
+    dynamic_template_data = serializers.DictField(required=False, allow_null=True, default=dict)
     cc = serializers.ListField(
         child=serializers.EmailField(),
         required=False,

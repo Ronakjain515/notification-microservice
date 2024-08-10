@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import EmailSerializer
 from .backend import EmailService
-from utilities.utils import ResponseInfo
+from utilities.utils import ResponseInfo, CustomException
 from utilities import messages
 
 class SendEmailAPIView(APIView):
@@ -16,17 +16,11 @@ class SendEmailAPIView(APIView):
         self.response_format = ResponseInfo().response
         super(SendEmailAPIView, self).__init__(**kwargs)
 
-    def post(self, request, *args, **kwargs):
-        email_type = kwargs.get('email_type')
-        
+    def post(self, request, email_type, *args, **kwargs):
         EMAIL_CHOICES = ['sendgrid', 'smtp']
 
         if email_type not in EMAIL_CHOICES:
-            self.response_format["data"] = None
-            self.response_format["error"] = messages.FAILURE
-            self.response_format["status_code"] = status.HTTP_400_BAD_REQUEST
-            self.response_format["message"] = [messages.VALID_PARAMS.format(', '.join(EMAIL_CHOICES))]
-            return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            raise CustomException(messages.VALID_PARAMS.format(', '.join(EMAIL_CHOICES)))
 
         serializer = EmailSerializer(data=request.data)
         if serializer.is_valid():
@@ -37,7 +31,7 @@ class SendEmailAPIView(APIView):
             subject = validated_data.get('subject')
             message = validated_data.get('message')
             template_id = validated_data.get('template_id')
-            dynamic_data = validated_data.get('dynamic_data', {})
+            dynamic_data = validated_data.get('dynamic_template_data')
             attachments = validated_data.get('attachments')
 
             response = EmailService.send_email(to_emails, subject, message, template_id, dynamic_data, email_type, cc_emails, bcc_emails, attachments)

@@ -70,8 +70,10 @@ class EmailService:
             for email in to_emails:
                 personalization = Personalization()
                 personalization.add_to(To(email))
-                for key, value in dynamic_data.items():
-                    personalization.dynamic_template_data[key] = value
+                if dynamic_data:
+                    for key, value in dynamic_data.items():
+                        personalization.dynamic_template_data = {}
+                        personalization.dynamic_template_data[key] = value
                 if cc_emails:
                     for cc_email in cc_emails:
                         personalization.add_cc(Cc(cc_email))
