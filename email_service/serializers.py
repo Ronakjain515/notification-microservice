@@ -1,5 +1,9 @@
 from rest_framework import serializers
 
+class AttachmentSerializer(serializers.Serializer):
+    file_name = serializers.CharField(max_length=255)
+    file = serializers.CharField(allow_blank=True, allow_null=True)
+
 class EmailSerializer(serializers.Serializer):
     to = serializers.ListField(
         child=serializers.EmailField(),
@@ -8,7 +12,7 @@ class EmailSerializer(serializers.Serializer):
     subject = serializers.CharField(required=False)
     message = serializers.CharField(required=False)
     template_id = serializers.CharField(required=False)
-    dynamic_data = serializers.DictField(required=False, allow_null=True, default=dict)
+    dynamic_template_data = serializers.DictField(required=False, allow_null=True, default=dict)
     cc = serializers.ListField(
         child=serializers.EmailField(),
         required=False,
@@ -20,7 +24,7 @@ class EmailSerializer(serializers.Serializer):
         allow_empty=True
     )
     attachments = serializers.ListField(
-        child=serializers.DictField(required=False, allow_null=True, default=dict),
+        child=AttachmentSerializer(),  # List of attachment dictionaries
         required=False,
         allow_empty=True
     )
@@ -30,7 +34,7 @@ class EmailSerializer(serializers.Serializer):
             # Ensure that both subject and message are provided for plain emails
             if not data.get('subject') or not data.get('message'):
                 raise serializers.ValidationError({
-                    'subject': 'Subject is required for plain messages',
-                    'message': 'Message is required for plain messages'
+                    'subject': 'Subject is required for email',
+                    'message': 'Message is required for email'
                 })
         return data
