@@ -9,8 +9,11 @@ from rest_framework.generics import CreateAPIView
 from utilities.utils import (
     logger,
     ResponseInfo,
-    CustomException)
+    CustomException,
+)
+from utilities import messages
 from .serializers import SmsServiceSerializer
+from utilities.sqs import push_message_to_sqs
 from utilities.constants import SMS_SERVICE_CHOICE
 from .backend import SmsService
 from utilities.permissions import IsAuthenticatedPermission
@@ -29,6 +32,7 @@ class SmsServiceAPIView(CreateAPIView):
          Constructor function for formatting the web response to return.
         """
         self.response_format = ResponseInfo().response
+        self.failed_messages_response_list = list()
         super(SmsServiceAPIView, self).__init__(**kwargs)
 
     def send_sms_service(self, send_to, message, service_type):
@@ -37,10 +41,17 @@ class SmsServiceAPIView(CreateAPIView):
 
         if len(failed_message) > 0:
             logger.warning(f"Partial success. Failed to send SMS to: {failed_message}")
-            self.response_format["data"] = failed_message
-            self.response_format["status_code"] = status.HTTP_207_MULTI_STATUS
-            self.response_format["error"] = "Failed Messages."
-            self.response_format["message"] = "Partial Success."
+            self.failed_messages_response_list.append(
+                {
+                    "message": message,
+                    "failed_nos": failed_message
+                 }
+            )
+
+            # self.response_format["data"] = failed_message
+            # self.response_format["status_code"] = status.HTTP_207_MULTI_STATUS
+            # self.response_format["error"] = "Failed Messages."
+            # self.response_format["message"] = "Partial Success."
         else:
             logger.info(f"SMS sent successfully to all recipients: {send_to}")
 
@@ -61,16 +72,32 @@ class SmsServiceAPIView(CreateAPIView):
             logger.error(f"Invalid service type: {service_type}")
             raise CustomException("Invalid service type.", 400)
 
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            use_sqs = serializer.validated_data.get("use_sqs")
-            if use_sqs:
-                # send data to sqs
-                pass
-            else:
+        use_sqs = request.data.get("use_sqs", False)
+
+        for payload in request.data["payload"]:
+            serializer = self.get_serializer(data=payload)
+            if serializer.is_valid(raise_exception=True):
                 send_to = serializer.validated_data.get("send_to")
                 message = serializer.validated_data.get("message")
-                self.send_sms_service(send_to, message, service_type)
+                if use_sqs:
+                    message = {
+                        "provider_type": "twilio",
+                        "service_type": "sms",
+                        "service_data": {
+                            "sent_to": send_to,
+                            "message": message
+                        }
+                    }
+                    push_message_to_sqs(message)
+
+                else:
+
+                    self.send_sms_service(send_to, message, service_type)
+        if len(self.failed_messages_response_list) > 0:
+            self.response_format["data"] = self.failed_messages_response_list
+            self.response_format["status_code"] = status.HTTP_207_MULTI_STATUS
+            self.response_format["error"] = "Failed Messages."
+            self.response_format["message"] = "Partial Success."
 
 
         return Response(self.response_format, status=self.response_format["status_code"])

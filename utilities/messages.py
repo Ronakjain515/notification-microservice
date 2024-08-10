@@ -58,3 +58,8 @@ CALENDAR_INVITE_FAILED = "Calendar sent failed."
 NOTIFICATION_MARK_READ = "Notification Marked as read."
 SEND_SUCCESS = '{} sent successfully'
 SEND_FAILED = 'Failed to send {}'
+
+MESSAGE_SENT = "Message sent successfully."
+INVALID_MESSAGE_CONTENT = "Invalid message content."
+UNSUPPORTED_OPERATION = "Unsupported operation."
+
