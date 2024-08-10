@@ -15,13 +15,14 @@ from utilities.utils import (
 from .serializers import (
     SendFirebasePushSerializer,
 )
+from utilities.permissions import IsAuthenticatedPermission
 
 
 class SendPushAPIView(CreateAPIView):
     """
     API view for sending push notifications.
     """
-    permission_classes = ()
+    permission_classes = (IsAuthenticatedPermission, )
     authentication_classes = ()
     serializer_class = SendFirebasePushSerializer
 
@@ -81,7 +82,7 @@ class SendPushAPIView(CreateAPIView):
                 self.response_format["data"] = None
                 self.response_format["error"] = str(e)
                 self.response_format["status_code"] = status.HTTP_500_INTERNAL_SERVER_ERROR
-                self.response_format["message"] = [messages.ERROR.format("Push Notification")]
+                self.response_format["message"] = [messages.FAILURE.format("Push Notification")]
                 return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             # Log validation failures
