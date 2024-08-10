@@ -1,3 +1,4 @@
+import copy
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +8,7 @@ from utilities.utils import ResponseInfo, CustomException
 from utilities import messages
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from utilities.sqs import push_message_to_sqs
 from utilities.utils import logger
 from utilities.permissions import IsAuthenticatedPermission
 
@@ -23,11 +25,19 @@ class SendEmailAPIView(CreateAPIView):
 
     def __init__(self, **kwargs):
         """
-        Constructor function for setting up the response format for this view.
+        Constructor function for formatting the web response to return.
         """
-        # Initialize response format from ResponseInfo utility
         self.response_format = ResponseInfo().response
+        self.failed_messages_response_list = list()
+        self.failed_payload = list()
+        logger.info("Initializing SendEmailAPIView.")
         super(SendEmailAPIView, self).__init__(**kwargs)
+
+    def send_email_service(self, service_type, payload):
+        """
+        Method to make service for push service.
+        """
+        EmailService().send_email(service_type, **payload)
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -55,46 +65,71 @@ class SendEmailAPIView(CreateAPIView):
             logger.error(f"Invalid provider_type: {provider_type}. Error: {error_message}")
             raise CustomException(error_message)
 
+        use_sqs = request.data.get('use_sqs')
         # Serialize and validate the request data
-        serializer = self.get_serializer(data=request.data, context={'provider_type': provider_type})
-        if serializer.is_valid():
-            # Extract validated data
-            validated_data = serializer.validated_data
-            to_emails = validated_data.get('to')
-            cc_emails = validated_data.get('cc')
-            bcc_emails = validated_data.get('bcc')
-            subject = validated_data.get('subject')
-            message = validated_data.get('message')
-            template_id = validated_data.get('template_id')
-            dynamic_data = validated_data.get('dynamic_template_data')
-            attachments = validated_data.get('attachments')
+        for requested_data in request.data.get('payload', []):
+            serializer = self.get_serializer(data=requested_data, context={'provider_type': provider_type})
+            if serializer.is_valid():
+                # Extract validated data
+                validated_data = serializer.validated_data
+                to_emails = validated_data.get('to')
+                cc_emails = validated_data.get('cc')
+                bcc_emails = validated_data.get('bcc')
+                subject = validated_data.get('subject')
+                message = validated_data.get('message')
+                template_id = validated_data.get('template_id')
+                dynamic_data = validated_data.get('dynamic_template_data')
+                attachments = validated_data.get('attachments')
 
-            # Log the email sending process
-            logger.info(f"Sending email with data: {validated_data}")
+                # Log the email sending process
+                logger.info(f"Sending email with data: {validated_data}")
 
-            # Call EmailService to send the email
-            response = EmailService.send_email(to_emails, subject, message, template_id, dynamic_data, provider_type, cc_emails, bcc_emails, attachments)
-            success, body, headers = response
+                if use_sqs:
+                    message = {
+                        "provider_type": provider_type,
+                        "service_type": "email",
+                        "service_data": {
+                            **validated_data
+                        }
+                    }
+                    push_message_to_sqs(message)
 
-            if success:
-                # Configure response for successful email sending
-                self.response_format["data"] = None
-                self.response_format["error"] = None
-                self.response_format["status_code"] = status.HTTP_200_OK
-                self.response_format["message"] = [messages.SEND_SUCCESS.format("Email")]
+                else:
+                    # Call EmailService to send the email
+                    response = self.send_email_service(provider_type, serializer.validated_data)
+                    logger.info("Email sent successfully.")
+                    success, body, headers = response
 
-                logger.info("Email sent successfully.")
-                return Response(self.response_format, status=status.HTTP_200_OK)
+                    if success:
+                        # Configure response for successful email sending
+                        self.response_format["data"] = None
+                        self.response_format["error"] = None
+                        self.response_format["status_code"] = status.HTTP_200_OK
+                        self.response_format["message"] = [messages.SEND_SUCCESS.format("Email")]
+                    else:
+                        # Configure response for failed email sending
+                        self.response_format["data"] = None
+                        self.response_format["error"] = messages.FAILURE
+                        self.response_format["status_code"] = status.HTTP_200_OK
+                        self.response_format["message"] = [body]
+                        logger.error(f"Failed to send email. Error: {body}")
             else:
-                # Configure response for failed email sending
-                self.response_format["data"] = None
-                self.response_format["error"] = messages.FAILURE
-                self.response_format["status_code"] = status.HTTP_200_OK
-                self.response_format["message"] = [body]
 
-                logger.error(f"Failed to send email. Error: {body}")
-                return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        else:
-            # Log validation errors
-            logger.warning(f"Validation errors: {serializer.errors}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                payload_copy = copy.deepcopy(requested_data)
+                payload_copy["errors"] = serializer.errors
+                self.failed_payload.append(payload_copy)
+                # Log validation errors
+                logger.warning(f"Validation errors: {serializer.errors}")
+
+        response_data = {
+            "failed_payload": None
+        }
+        if len(self.failed_payload) > 0:
+            response_data["failed_payload"] = self.failed_payload
+
+        # Update the response format for success
+        self.response_format["data"] = response_data
+        self.response_format["error"] = None
+        self.response_format["status_code"] = status.HTTP_200_OK
+        self.response_format["message"] = [messages.SEND_SUCCESS.format("Email")]
+        return Response(self.response_format)
