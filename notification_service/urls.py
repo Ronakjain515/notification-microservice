@@ -41,6 +41,6 @@ urlpatterns = [
 
     path('email/', include("email_service.urls")),
     path("push/", include("push_notifications.urls")),
-    path("sms/", include("sms_service.urls")),
+    path("", include("sms_service.urls")),
     path("common/", include("common.urls")),
 ]
