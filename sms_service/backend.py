@@ -1,4 +1,5 @@
 from .twilio import send_twilio_sms
+from utilities.utils import logger
 
 
 class SmsService:
@@ -7,7 +8,9 @@ class SmsService:
 
         if service == "twilio":
             for ph_no in send_to:
-                send_twilio_sms(message, ph_no)
+                failed_message = send_twilio_sms(message, ph_no)
+                return failed_message
         else:
+            logger.warning(f"Unsupported service: {service}")
             return None
 
