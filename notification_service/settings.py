@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'email_service',
     'sms_service',
     'push_notifications',
+    'common',
 ]
 
 MIDDLEWARE = [
