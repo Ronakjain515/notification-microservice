@@ -1,4 +1,5 @@
 import json
+
 from rest_framework import status
 from rest_framework.generics import (
     CreateAPIView,
@@ -13,6 +14,7 @@ from utilities import messages
 from utilities.permissions import (
     IsAuthenticatedPermission,
 )
+from push_notifications.views import SendPushAPIView
 
 
 class GetSQSDataAPIView(CreateAPIView):
@@ -37,16 +39,17 @@ class GetSQSDataAPIView(CreateAPIView):
         POSt Method to get data from SQS.
         """
         print("Data HERE", request.data)
-        request_data = request.data["json_string"]
+        request_data = json.loads(request.data["json_string"])
+        receipt_handle = request.data["receipt_handle"]
 
-        # if request_data["service"] == "push":
-        #     pass
-        #
-        # if request_data["service"] == "sms":
-        #     pass
-        #
-        # if request_data["service"] == "email":
-        #     pass
+        if request_data["service_type"] == "push":
+            SendPushAPIView().send_push_service(request_data["provider_type"], request_data["service_data"])
+
+        if request_data["service_type"] == "sms":
+            pass
+
+        if request_data["service_type"] == "email":
+            pass
 
         self.response_format["data"] = None
         self.response_format["error"] = None
