@@ -5,3 +5,5 @@ MEDIUM_CHOICE = (
 )
 
 SMS_SERVICE_CHOICE = ["twilio"]
+
+PUSH_SERVICE_CHOICE = ["firebase",]

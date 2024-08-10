@@ -36,19 +36,20 @@ class GetSQSDataAPIView(CreateAPIView):
         """
         POSt Method to get data from SQS.
         """
-        request_data = json.loads(request.data["json_string"])
+        print("Data HERE", request.data)
+        request_data = request.data["json_string"]
 
-        if request_data["service"] == "push":
-            pass
+        # if request_data["service"] == "push":
+        #     pass
+        #
+        # if request_data["service"] == "sms":
+        #     pass
+        #
+        # if request_data["service"] == "email":
+        #     pass
 
-        if request_data["service"] == "sms":
-            pass
-
-        if request_data["service"] == "email":
-            pass
-
-            self.response_format["data"] = None
-            self.response_format["error"] = None
-            self.response_format["status_code"] = status.HTTP_200_OK
-            self.response_format["message"] = [messages.SUCCESS]
+        self.response_format["data"] = None
+        self.response_format["error"] = None
+        self.response_format["status_code"] = status.HTTP_200_OK
+        self.response_format["message"] = [messages.SUCCESS]
         return Response(self.response_format)

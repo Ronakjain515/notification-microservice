@@ -11,10 +11,13 @@ from .backend import PushService
 from utilities.utils import (
     logger,
     ResponseInfo,
+    CustomException,
 )
 from .serializers import (
     SendFirebasePushSerializer,
 )
+from utilities.sqs import push_message_to_sqs
+from utilities.constants import PUSH_SERVICE_CHOICE
 from utilities.permissions import IsAuthenticatedPermission
 
 
@@ -34,6 +37,12 @@ class SendPushAPIView(CreateAPIView):
         super(SendPushAPIView, self).__init__(**kwargs)
         logger.debug("SendPushAPIView instance initialized.")
 
+    def send_push_service(self, service_type, payload):
+        """
+        Method to make service for push service.
+        """
+        PushService().send_push(service_type, payload)
+
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
@@ -52,40 +61,55 @@ class SendPushAPIView(CreateAPIView):
         logger.info("POST request received for sending push notifications.")
 
         # Retrieve the service type from URL parameters
-        service_type = kwargs.get("service_type")
+        service_type = self.kwargs["service_type"]
         logger.debug(f"Service type received: {service_type}")
 
-        # Serialize the incoming request data
-        push_serializer = self.get_serializer(data=request.data)
+        if service_type not in PUSH_SERVICE_CHOICE:
+            logger.error(f"Invalid service type: {service_type}")
+            raise CustomException("Invalid service type.", 400)
 
-        if push_serializer.is_valid(raise_exception=True):
-            title = push_serializer.validated_data.get("title")
-            content = push_serializer.validated_data.get("content")
-            tokens = push_serializer.validated_data.get("tokens")
-            extra_args = push_serializer.validated_data.get("extra_args")
-            badge_count = push_serializer.validated_data.get("badge_count")
+        use_sqs = request.data.get("use_sqs", False)
 
-            logger.info("Push notification data validated successfully.")
+        success_objects = []
+        failure_objects = []
 
-            try:
-                PushService().send_push(service_type, title, content, extra_args, tokens, badge_count)
-                logger.info("Push notification sent successfully.")
+        logger.debug(f"Looping for payload.")
+        for request_data in request.data.get("payload", []):
+            # Serialize the incoming request data
+            push_serializer = self.get_serializer(data=request_data)
 
-                # Update the response format for success
-                self.response_format["data"] = None
-                self.response_format["error"] = None
-                self.response_format["status_code"] = status.HTTP_200_OK
-                self.response_format["message"] = [messages.SHARED.format("Push Notification")]
-            except Exception as e:
-                # Log any errors that occur during push notification sending
-                logger.error(f"Error sending push notification: {str(e)}")
-                self.response_format["data"] = None
-                self.response_format["error"] = str(e)
-                self.response_format["status_code"] = status.HTTP_500_INTERNAL_SERVER_ERROR
-                self.response_format["message"] = [messages.FAILURE.format("Push Notification")]
-                return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        else:
-            # Log validation failures
-            logger.warning("Push serializer validation failed.")
+            if push_serializer.is_valid(raise_exception=False):
 
+                logger.info("Push notification data validated successfully.")
+
+                try:
+                    if use_sqs:
+                        message = {
+                            "provider_type": "firebase",
+                            "service_type": "push",
+                            "service_data": push_serializer.validated_data
+                        }
+                        push_message_to_sqs(message)
+                    else:
+                        self.send_push_service(service_type, push_serializer.validated_data)
+                        logger.info("Push notification sent successfully.")
+
+                    success_objects.append(push_serializer.validated_data)
+                except Exception as e:
+                    # Log any errors that occur during push notification sending
+                    logger.error(f"Error sending push notification: {str(e)}")
+                    self.response_format["data"] = None
+                    self.response_format["error"] = str(e)
+                    self.response_format["status_code"] = status.HTTP_500_INTERNAL_SERVER_ERROR
+                    self.response_format["message"] = [messages.FAILURE.format("Push Notification")]
+                    return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                failure_objects.append(push_serializer.errors)
+
+        # Update the response format for success
+        self.response_format["data"] = success_objects
+        self.response_format["failure_data"] = failure_objects
+        self.response_format["error"] = None
+        self.response_format["status_code"] = status.HTTP_200_OK
+        self.response_format["message"] = [messages.SHARED.format("Push Notification")]
         return Response(self.response_format)
