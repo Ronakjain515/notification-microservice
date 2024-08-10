@@ -1,7 +1,7 @@
+import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Personalization
 from django.core.mail import send_mail, EmailMessage
-from django.conf import settings
 
 class EmailService:
     @staticmethod
@@ -19,7 +19,7 @@ class EmailService:
     @staticmethod
     def _send_smtp_email(to_emails, subject, message):
         try:
-            email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, to_emails)
+            email = EmailMessage(subject, message, os.getenv('DEFAULT_FROM_EMAIL'), to_emails)
             email.content_subtype = "html"  # Main content is now text/html
             email.send()
             return 200, "Email sent successfully via SMTP", {}
@@ -30,7 +30,7 @@ class EmailService:
     @staticmethod
     def _send_sendgrid_email(to_emails, subject, message, template_id, dynamic_data):
         mail = Mail()
-        mail.from_email = Email(settings.SENDGRID_SENDER_EMAIL)
+        mail.from_email = Email(os.getenv('SENDGRID_SENDER_EMAIL'))
 
         if template_id:
             mail.template_id = template_id
@@ -47,7 +47,7 @@ class EmailService:
                 mail.add_to(To(email))
 
         try:
-            sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+            sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
             response = sg.send(mail)
             return response.ok, response.body, response.headers
         except Exception as e:
