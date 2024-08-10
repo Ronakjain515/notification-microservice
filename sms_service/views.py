@@ -1,5 +1,9 @@
+import os
+from drf_yasg import openapi
+from twilio.rest import Client
 from rest_framework import status
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.generics import CreateAPIView
 
 from utilities.utils import (
@@ -26,6 +30,17 @@ class SmsServiceAPIView(CreateAPIView):
         self.response_format = ResponseInfo().response
         super(SmsServiceAPIView, self).__init__(**kwargs)
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                'service_type',
+                openapi.IN_PATH,
+                description="Service type",
+                type=openapi.TYPE_STRING,
+                enum=['twilio']
+            ),
+        ],
+    )
     def post(self, request, *args, **kwargs):
         service_type = self.kwargs["service_type"]
         if service_type not in SMS_SERVICE_CHOICE:

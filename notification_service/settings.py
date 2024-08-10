@@ -153,6 +153,12 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 
 LOGGING_DIR = os.path.join(BASE_DIR, "log")
+
+subdirs = ["debug_logs", "warning_logs", "error_logs", "info_logs", "critical_logs"]
+
+for subdir in subdirs:
+    os.makedirs(os.path.join(LOGGING_DIR, subdir), exist_ok=True)
+    
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -202,7 +208,12 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django": {
+        # "django": {
+        #     "handlers": ["debug", "warning", "error", "info", "critical_logs"],
+        #     "level": "DEBUG",
+        #     "propagate": True,
+        # },
+        "microservice": {
             "handlers": ["debug", "warning", "error", "info", "critical_logs"],
             "level": "DEBUG",
             "propagate": True,

@@ -30,6 +30,14 @@ class EmailSerializer(serializers.Serializer):
     )
 
     def validate(self, data):
+
+        if self.context['provider_type'] == 'smtp':
+            if not data.get('subject') or not data.get('message'):
+                raise serializers.ValidationError({
+                    'subject': 'Subject is required for email',
+                    'message': 'Message is required for email'
+                })
+
         if not data.get('template_id'):
             # Ensure that both subject and message are provided for plain emails
             if not data.get('subject') or not data.get('message'):
