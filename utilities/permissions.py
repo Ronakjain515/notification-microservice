@@ -1,5 +1,4 @@
 import os
-
 from rest_framework.permissions import BasePermission
 
 from utilities import messages
@@ -21,4 +20,6 @@ class IsAuthenticatedPermission(BasePermission):
             head, token = auth_header.split(" ")
             return head == "Bearer" and token == os.getenv("API_KEY")
         except AttributeError:
+            return False
+        except ValueError:
             return False

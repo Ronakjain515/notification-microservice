@@ -25,8 +25,8 @@ class SendPushAPIViewTests(APITestCase):
             'extra_args': {},
             'badge_count': -1
         }
-        self.valid_auth_header = {'Authorization': 'TYKHNJCHDSBUKHCBDKCHDYCUKKKKKFYG'}
-        self.invalid_auth_header = {'Authorization': 'TYKHNJCHDSBUKHCBDKCasdHDYCUKKKKKFYG'}
+        self.valid_auth_header = {'Authorization': 'Bearer PgNcfgxACIV7FOZPNL0rwroOm6Ut2eD0'}
+        self.invalid_auth_header = {'Authorization': 'Bearer HsdfPgNcfgxACIV7FOZPNL0rwroOm6Ut2eD0'}
 
     def test_send_push_success(self):
         """
