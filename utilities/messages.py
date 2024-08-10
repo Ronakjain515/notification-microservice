@@ -56,3 +56,5 @@ DOMAIN_INVALID = "Invalid Domain."
 
 CALENDAR_INVITE_FAILED = "Calendar sent failed."
 NOTIFICATION_MARK_READ = "Notification Marked as read."
+SEND_SUCCESS = '{} sent successfully'
+SEND_FAILED = 'Failed to send {}'

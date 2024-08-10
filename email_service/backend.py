@@ -3,7 +3,6 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Personalization, Content, Cc, Bcc, Attachment
 from sendgrid.helpers.mail import FileContent, FileName, FileType
 from django.core.mail import EmailMessage
-from io import BytesIO
 import base64
 import mimetypes
 
