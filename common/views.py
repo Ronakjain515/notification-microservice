@@ -14,7 +14,10 @@ from utilities import messages
 from utilities.permissions import (
     IsAuthenticatedPermission,
 )
+from utilities.sqs import receiver_message_sqs
 from push_notifications.views import SendPushAPIView
+from email_service.views import SendEmailAPIView
+from sms_service.views import SmsServiceAPIView
 
 
 class GetSQSDataAPIView(CreateAPIView):
@@ -44,12 +47,15 @@ class GetSQSDataAPIView(CreateAPIView):
 
         if request_data["service_type"] == "push":
             SendPushAPIView().send_push_service(request_data["provider_type"], request_data["service_data"])
+            receiver_message_sqs(receipt_handle)
 
         if request_data["service_type"] == "sms":
-            pass
+            SmsServiceAPIView().send_sms_service(request_data["provider_type"], request_data["service_data"])
+            receiver_message_sqs(receipt_handle)
 
         if request_data["service_type"] == "email":
-            pass
+            SendEmailAPIView().send_email_service(request_data["provider_type"], request_data["service_data"])
+            receiver_message_sqs(receipt_handle)
 
         self.response_format["data"] = None
         self.response_format["error"] = None

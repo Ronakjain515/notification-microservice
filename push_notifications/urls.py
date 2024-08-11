@@ -6,5 +6,5 @@ from .views import (
 
 
 urlpatterns = [
-    path("send/<str:service_type>/", SendPushAPIView.as_view(), name="send-push"),
+    path("send/push/<str:service_type>/", SendPushAPIView.as_view(), name="send-push"),
 ]

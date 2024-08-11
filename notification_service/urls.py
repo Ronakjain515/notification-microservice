@@ -39,8 +39,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
 
-    path('email/', include("email_service.urls")),
-    path("push/", include("push_notifications.urls")),
-    path("", include("sms_service.urls")),
-    path("common/", include("common.urls")),
+    path("api/", include("email_service.urls")),
+    path("api/", include("push_notifications.urls")),
+    path("api/", include("sms_service.urls")),
+    path("api/common/", include("common.urls")),
 ]
