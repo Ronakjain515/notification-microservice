@@ -37,7 +37,7 @@ class SendEmailAPIView(CreateAPIView):
         """
         Method to make service for push service.
         """
-        EmailService().send_email(service_type, **payload)
+        return EmailService().send_email(service_type, **payload)
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -72,14 +72,6 @@ class SendEmailAPIView(CreateAPIView):
             if serializer.is_valid():
                 # Extract validated data
                 validated_data = serializer.validated_data
-                to_emails = validated_data.get('to')
-                cc_emails = validated_data.get('cc')
-                bcc_emails = validated_data.get('bcc')
-                subject = validated_data.get('subject')
-                message = validated_data.get('message')
-                template_id = validated_data.get('template_id')
-                dynamic_data = validated_data.get('dynamic_template_data')
-                attachments = validated_data.get('attachments')
 
                 # Log the email sending process
                 logger.info(f"Sending email with data: {validated_data}")
@@ -108,10 +100,9 @@ class SendEmailAPIView(CreateAPIView):
                         self.response_format["message"] = [messages.SEND_SUCCESS.format("Email")]
                     else:
                         # Configure response for failed email sending
-                        self.response_format["data"] = None
-                        self.response_format["error"] = messages.FAILURE
-                        self.response_format["status_code"] = status.HTTP_200_OK
-                        self.response_format["message"] = [body]
+                        payload_copy = copy.deepcopy(requested_data)
+                        payload_copy["errors"] = body
+                        self.failed_payload.append(payload_copy)                        
                         logger.error(f"Failed to send email. Error: {body}")
             else:
 
