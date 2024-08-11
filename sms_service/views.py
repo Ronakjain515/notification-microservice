@@ -39,8 +39,8 @@ class SmsServiceAPIView(CreateAPIView):
         super(SmsServiceAPIView, self).__init__(**kwargs)
 
     def send_sms_service(self, provider_type, service_data):
-        logger.info(f"Attempting to send SMS via {provider_type} to {service_data['sent_to']}")
-        failed_message = SmsService().send_sms(provider_type, service_data["message"], service_data["sent_to"])
+        logger.info(f"Attempting to send SMS via {provider_type} to {service_data['send_to']}")
+        failed_message = SmsService().send_sms(provider_type, service_data["message"], service_data["send_to"])
 
         if len(failed_message) > 0:
             logger.warning(f"Partial success. Failed to send SMS to: {failed_message}")
@@ -82,7 +82,7 @@ class SmsServiceAPIView(CreateAPIView):
                 message = serializer.validated_data.get("message")
                 logger.info(f"Valid payload received for: {send_to}.")
                 service_data = {
-                    "sent_to": send_to,
+                    "send_to": send_to,
                     "message": message
                 }
 
