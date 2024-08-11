@@ -112,7 +112,7 @@ class SmsServiceAPIView(CreateAPIView):
             }
             self.response_format["status_code"] = status.HTTP_200_OK
             self.response_format["error"] = "Failed Messages."
-            self.response_format["message"] = "Partial Success."
+            self.response_format["message"] = "Success"
         else:
             logger.info("All messages sent successfully.")
 
