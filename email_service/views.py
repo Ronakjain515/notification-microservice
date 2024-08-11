@@ -65,7 +65,7 @@ class SendEmailAPIView(CreateAPIView):
             logger.error(f"Invalid provider_type: {provider_type}. Error: {error_message}")
             raise CustomException(error_message)
 
-        use_sqs = request.data.get('use_sqs')
+        use_sqs = request.data.get('use_sqs', False)
         # Serialize and validate the request data
         for requested_data in request.data.get('payload', []):
             serializer = self.get_serializer(data=requested_data, context={'provider_type': provider_type})

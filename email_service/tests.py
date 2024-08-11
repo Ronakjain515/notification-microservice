@@ -10,24 +10,30 @@ class SendEmailAPIViewTests(APITestCase):
         """
         self.url = reverse('send-email', kwargs={'provider_type': 'sendgrid'})
         self.valid_payload = {
-            'to': ['sandeep.negi@mindbowser.com', 'ravi.mourya@mindbowser.com'],
-            'cc': ['ronak.jain@mindbowser.com'],
-            'bcc': ['shubham.yadav@mindbowser.com'],
-            'subject': 'Test Subject',
-            'message': 'Test Message',
-            'template_id': 'd-cb04b0e0fbf84197a707403456965fc3',
-            'dynamic_template_data': {'title': 'Accelathon', 'subject': 'Mindbowser'},
-            'attachments': []
+            "use_sqs": True,
+            "payload": [{
+                'to': ['sandeep.negi@mindbowser.com', 'ravi.mourya@mindbowser.com'],
+                'cc': ['ronak.jain@mindbowser.com'],
+                'bcc': ['shubham.yadav@mindbowser.com'],
+                'subject': 'Test Subject',
+                'message': 'Test Message',
+                'template_id': 'd-cb04b0e0fbf84197a707403456965fc3',
+                'dynamic_template_data': {'title': 'Accelathon', 'subject': 'Mindbowser'},
+                'attachments': []
+            }]
         }
         self.invalid_payload = {
-            'to': [],
-            'cc': [],
-            'bcc': [],
-            'subject': '',
-            'message': '',
-            'template_id': '',
-            'dynamic_template_data': {},
-            'attachments': []
+            "use_sqs": False,
+            "payload": [{
+                'to': [],
+                'cc': [],
+                'bcc': [],
+                'subject': '',
+                'message': '',
+                'template_id': '',
+                'dynamic_template_data': {},
+                'attachments': []
+            }]
         }
         self.valid_auth_header = {'Authorization': 'Bearer PgNcfgxACIV7FOZPNL0rwroOm6Ut2eD0'}
         self.invalid_auth_header = {'Authorization': 'Bearer HsdfPgNcfgxACIV7FOZPNL0rwroOm6Ut2eD0'}
@@ -71,4 +77,4 @@ class SendEmailAPIViewTests(APITestCase):
             HTTP_AUTHORIZATION=self.valid_auth_header['Authorization']
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
